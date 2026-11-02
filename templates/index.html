@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBot AI</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/script.js" defer></script>
+</head>
+<body>
+    <main class="app">
+        <header class="header">
+            <div class="logo">✦</div>
+            <div class="brand">
+                <h1>SmartBot AI</h1>
+                <p><span class="dot"></span> Your intelligent assistant</p>
+            </div>
+            <button id="clearBtn" class="clear-btn" type="button">
+                Clear chat
+            </button>
+        </header>
+
+        <section id="chat" class="chat" aria-live="polite">
+            <div class="message bot">
+                <div class="avatar">✦</div>
+                <div class="bubble">
+                    <strong>Hello! 👋</strong>
+                    <p>I'm SmartBot, your AI assistant. Ask me about programming, college subjects, projects, or anything you'd like to learn.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="suggestions" aria-label="Suggested questions">
+            <button class="suggestion" data-prompt="Explain Python in simple words">Learn Python</button>
+            <button class="suggestion" data-prompt="Suggest some BCA final year project ideas">Project ideas</button>
+            <button class="suggestion" data-prompt="Explain artificial intelligence with examples">What is AI?</button>
+        </section>
+
+        <form id="chatForm" class="input-area">
+            <input
+                id="messageInput"
+                type="text"
+                placeholder="Message SmartBot..."
+                maxlength="4000"
+                autocomplete="off"
+                aria-label="Your message"
+                required
+            >
+            <button id="sendBtn" type="submit" aria-label="Send message">
+                Send ➤
+            </button>
+        </form>
+
+        <footer>SmartBot AI · BCA College Project</footer>
+    </main>
+</body>
+</html>
