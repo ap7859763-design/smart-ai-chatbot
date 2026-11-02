@@ -1,17 +1,15 @@
+import os
 from flask import Flask, jsonify, render_template, request
-import requests
+from openai import OpenAI, APIError, APITimeoutError
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024
-
-OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL_NAME = "llama3.2:1b"
 
 SYSTEM_PROMPT = """
 You are SmartBot, a friendly AI assistant for a college project.
 Answer clearly and politely.
 Explain difficult topics in simple English.
-Help with programming, studies, ideas and general questions.
+Help with programming, studies, project ideas and general questions.
 If you do not know something, say so honestly.
 """
 
@@ -39,6 +37,12 @@ def chat():
             "reply": "Please keep your message under 4000 characters."
         }), 400
 
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        return jsonify({
+            "reply": "Server setup incomplete: API key is not configured."
+        }), 503
+
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
     if isinstance(history, list):
@@ -58,40 +62,37 @@ def chat():
     messages.append({"role": "user", "content": message})
 
     try:
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": MODEL_NAME,
-                "messages": messages,
-                "stream": False
-            },
-            timeout=180
-        )
-        response.raise_for_status()
+        client = OpenAI(api_key=api_key, timeout=45.0)
 
-        result = response.json()
-        reply = result.get("message", {}).get("content", "")
+        response = client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=messages,
+            max_tokens=700
+        )
+
+        reply = response.choices[0].message.content
 
         return jsonify({
             "reply": reply or "I couldn't create an answer. Please try again."
         })
 
-    except requests.exceptions.ConnectionError:
-        return jsonify({
-            "reply": "Cannot connect to Ollama. Please open Ollama and try again."
-        }), 503
-
-    except requests.exceptions.Timeout:
+    except APITimeoutError:
         return jsonify({
             "reply": "The AI is taking too long. Please try again."
         }), 504
 
-    except requests.exceptions.RequestException:
-        app.logger.exception("Local AI request failed")
+    except APIError:
+        app.logger.exception("OpenAI API request failed")
         return jsonify({
-            "reply": "Local AI request failed. Please check the terminal."
+            "reply": "The AI service could not complete your request. Please check the server logs and API configuration."
         }), 502
+
+    except Exception:
+        app.logger.exception("Unexpected chat error")
+        return jsonify({
+            "reply": "Something went wrong. Please check the server logs."
+        }), 500
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
